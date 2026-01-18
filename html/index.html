@@ -14,28 +14,31 @@
     <link rel="stylesheet" href="../style.css">
 </head>
 
-<body class="bg-light">
-    <div class="container py-4">
-        <h1 class="mb-4 text-center">Mappa dei Comuni</h1>
+<body class="bg-light overflow-hidden">
 
-        <div class="row g-3 mb-4">
+    <!-- Full Screen Map -->
+    <div id="map"></div>
+
+    <!-- Floating Island for Controls -->
+    <div class="island-container p-3 p-md-4">
+        <h1 class="h4 mb-3 text-center text-primary fw-bold">Mappa dei Comuni</h1>
+
+        <div class="row g-3">
             <div class="col-md-6">
-                <label for="regione" class="form-label">Regione</label>
-                <select name="regione" id="regione" class="form-select">
-                    <option value="">Seleziona Regione</option>
-                </select>
+                <div class="form-floating">
+                    <select name="regione" id="regione" class="form-select border-0 bg-light rounded-4">
+                        <option value="">Seleziona Regione</option>
+                    </select>
+                    <label for="regione">Regione</label>
+                </div>
             </div>
             <div class="col-md-6">
-                <label for="provincia" class="form-label">Provincia</label>
-                <select name="provincia" id="provincia" class="form-select">
-                    <option value="">Seleziona Provincia</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <div id="map" style="height: 600px; width: 100%;"></div>
+                <div class="form-floating">
+                    <select name="provincia" id="provincia" class="form-select border-0 bg-light rounded-4">
+                        <option value="">Seleziona Provincia</option>
+                    </select>
+                    <label for="provincia">Provincia</label>
+                </div>
             </div>
         </div>
     </div>
