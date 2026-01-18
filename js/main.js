@@ -2,9 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
     main()
 })
 
+let map; // Global scope for map
+let comuneMarkers = []; // Global scope for markers
+
 async function main() {
     // creazione mappa
-    var map = L.map('map').setView([45, 12], 13);
+    map = L.map('map').setView([45, 12], 13);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -24,8 +27,6 @@ async function main() {
 
     }
 
-    map.panTo([10.737, -73.923], 13)
-
     map.on('click', onMapClick)
 
     // Selettori regioni e province
@@ -42,7 +43,7 @@ async function main() {
     })
 
     inputProvincia.addEventListener("change", () => {
-        aggiornaMappa(filtraComuni(comuni, inputProvincia))
+        aggiornaMappa(filtraComuni(comuni, inputProvincia), inputProvincia.value)
         // Zoom mappa
     })
 }
@@ -145,7 +146,7 @@ function aggiornaSelettoreRegioni(comuni, inputRegione, inputProvincia) {
     aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia)
 }
 
-function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) {
+async function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) {
     let provincie = rimuoviDuplicati(filtraProvincie(comuni, inputRegione).map(x => x.provincia.nome))
 
     let opzioni = ""
@@ -154,12 +155,75 @@ function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) {
     }
     inputProvincia.innerHTML = opzioni
 
+    // Zoom to Region if selected
+    if (inputRegione.value) {
+        try {
+            const regionCoords = await getLatLon(inputRegione.value + ", Italy");
+            if (regionCoords && regionCoords.lat) {
+                map.flyTo([regionCoords.lat, regionCoords.lon], 8);
+            }
+        } catch (e) {
+            console.warn("Zoom fail:", e)
+        }
+    }
+
     // Aggiorna i comuni
-    aggiornaMappa(filtraComuni(comuni, inputProvincia))
+    aggiornaMappa(filtraComuni(comuni, inputProvincia), inputProvincia.value)
 }
 
-function aggiornaMappa(comuniSelezionati) {
+async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
     console.log(comuniSelezionati)
+
+    // Clear existing markers
+    if (window.comuneMarkers) {
+        window.comuneMarkers.forEach(marker => map.removeLayer(marker));
+    }
+    window.comuneMarkers = [];
+
+    // Fetch province coordinates for filtering
+    let provinceCenter = null;
+    if (nomeProvincia) {
+        try {
+            provinceCenter = await getLatLon(nomeProvincia + ", Italy");
+            if (provinceCenter && provinceCenter.lat) {
+                map.flyTo([provinceCenter.lat, provinceCenter.lon], 10);
+            }
+        } catch (e) {
+            console.warn("Could not fetch province center:", e);
+        }
+    }
+
+    // Add new markers
+    for (const comune of comuniSelezionati) {
+        try {
+            const coords = await getLatLon(comune.nome);
+            if (coords && coords.lat && coords.lon) {
+                // Check distance if we have a province center
+                if (provinceCenter && provinceCenter.lat) {
+                    const dist = map.distance([provinceCenter.lat, provinceCenter.lon], [coords.lat, coords.lon]);
+                    // 70km threshold (70000 meters)
+                    if (dist > 70000) {
+                        console.warn(`Skipping ${comune.nome} - too far from ${nomeProvincia} (${Math.round(dist / 1000)}km)`);
+                        continue;
+                    }
+                }
+
+                const marker = L.marker([coords.lat, coords.lon])
+                    .addTo(map)
+                    .bindPopup(`<b>${comune.nome}</b><br>Provincia: ${comune.provincia.nome}`);
+
+                window.comuneMarkers.push(marker);
+            }
+        } catch (e) {
+            console.warn(`Could not get coords for ${comune.nome}:`, e);
+        }
+    }
+
+    // Fit bounds if we have markers
+    if (window.comuneMarkers.length > 0) {
+        const group = new L.featureGroup(window.comuneMarkers);
+        map.fitBounds(group.getBounds());
+    }
 }
 
 function filtraProvincie(comuni, inputRegione) {
