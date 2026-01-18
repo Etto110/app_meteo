@@ -1,3 +1,7 @@
+document.addEventListener("DOMContentLoaded", () => {
+    main()
+})
+
 async function main() {
     // creazione mappa
     var map = L.map('map').setView([45, 12], 13);
@@ -6,10 +10,6 @@ async function main() {
         maxZoom: 19,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
-
-    //metodi test
-    console.log(await getLatLon("Padova"))
-    console.log(await meteoDiz(await getLatLon("Padova")))
 
     // creazione popup con latlon
     var popup = L.popup();
@@ -35,18 +35,17 @@ async function main() {
     let inputRegione = document.querySelector("#regione")
     let inputProvincia = document.querySelector("#provincia")
 
-    initSelettoreRegioni(comuni, inputRegione, inputProvincia)
+    aggiornaSelettoreRegioni(comuni, inputRegione, inputProvincia)
 
     inputRegione.addEventListener("change", () => {
-        initSelettoreProvincie(comuni, inputRegione, inputProvincia)
+        aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia)
     })
 
     inputProvincia.addEventListener("change", () => {
-        aggiornaComuni(comuni, inputProvincia)
+        aggiornaMappa(filtraComuni(comuni, inputProvincia))
         // Zoom mappa
     })
 }
-main()
 
 async function getLatLon(citta) {
     let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&count=1&language=en&format=json`)
@@ -133,7 +132,7 @@ async function getComuni() {
         .then((response) => response.json())
 }
 
-function initSelettoreRegioni(comuni, inputRegione, inputProvincia) {
+function aggiornaSelettoreRegioni(comuni, inputRegione, inputProvincia) {
     let regioni = rimuoviDuplicati(comuni.map(x => x.regione.nome))
 
     let opzioni = ""
@@ -143,10 +142,10 @@ function initSelettoreRegioni(comuni, inputRegione, inputProvincia) {
     inputRegione.innerHTML = opzioni
 
     // Aggiorna le provincie
-    initSelettoreProvincie(comuni, inputRegione, inputProvincia)
+    aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia)
 }
 
-function initSelettoreProvincie(comuni, inputRegione, inputProvincia) {
+function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) {
     let provincie = rimuoviDuplicati(filtraProvincie(comuni, inputRegione).map(x => x.provincia.nome))
 
     let opzioni = ""
@@ -156,11 +155,11 @@ function initSelettoreProvincie(comuni, inputRegione, inputProvincia) {
     inputProvincia.innerHTML = opzioni
 
     // Aggiorna i comuni
-    aggiornaComuni(comuni, inputProvincia)
+    aggiornaMappa(filtraComuni(comuni, inputProvincia))
 }
 
-function aggiornaComuni(comuni, inputProvincia) {
-    console.log(filtraComuni(comuni, inputProvincia))
+function aggiornaMappa(comuniSelezionati) {
+    console.log(comuniSelezionati)
 }
 
 function filtraProvincie(comuni, inputRegione) {
