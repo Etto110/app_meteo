@@ -1,10 +1,60 @@
-async function getLatLon (citta) {
+async function main() {
+    // creazione mappa
+    var map = L.map('map').setView([45, 12], 13);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    //metodi test
+    console.log(await getLatLon("Padova"))
+    console.log(await meteoDiz(await getLatLon("Padova")))
+
+    // creazione popup con latlon
+    var popup = L.popup();
+
+    function onMapClick(e) {
+        console.log(e.latlng);
+        popup
+            .setLatLng(e.latlng)
+            .setContent("You clicked the map at " + e.latlng.toString())
+            .openOn(map)
+        return e.latlng
+
+    }
+
+    map.panTo([10.737, -73.923], 13)
+
+    map.on('click', onMapClick)
+
+    // Selettori regioni e province
+
+    const comuni = await getComuni()
+
+    let inputRegione = document.querySelector("#regione")
+    let inputProvincia = document.querySelector("#provincia")
+
+    initSelettoreRegioni(comuni, inputRegione, inputProvincia)
+
+    inputRegione.addEventListener("change", () => {
+        initSelettoreProvincie(comuni, inputRegione, inputProvincia)
+    })
+
+    inputProvincia.addEventListener("change", () => {
+        aggiornaComuni(comuni, inputProvincia)
+        // Zoom mappa
+    })
+}
+main()
+
+async function getLatLon(citta) {
     let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&count=1&language=en&format=json`)
     let data = await x.json()
-    return {lat: data.results[0].latitude, lon: data.results[0].longitude}
+    return { lat: data.results[0].latitude, lon: data.results[0].longitude }
 }
 
-async function meteoDiz(coords){
+async function meteoDiz(coords) {
     return await meteo(coords["lat"], coords["lon"])
 }
 
@@ -78,37 +128,51 @@ async function meteo(lat, lon) {
     return weatherData
 }
 
-async function main() {    
-    
-    // creazione mappa
-    var map = L.map('map').setView([45, 12], 13);
-
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
-
-    //metodi test
-    console.log(await getLatLon("Padova"))
-    console.log(await meteoDiz(await getLatLon("Padova")))
-    
-    // creazione popup con latlon
-    var popup = L.popup();
-
-    function onMapClick(e) {
-        console.log(e.latlng);
-        popup
-            .setLatLng(e.latlng)
-            .setContent("You clicked the map at " + e.latlng.toString())
-            .openOn(map)
-        return e.latlng
-        
-    }
-
-    map.panTo([10.737, -73.923], 13)
-    
-    map.on('click', onMapClick)
-
-    
+async function getComuni() {
+    return await fetch("https://raw.githubusercontent.com/matteocontrini/comuni-json/master/comuni.json")
+        .then((response) => response.json())
 }
-main()
+
+function initSelettoreRegioni(comuni, inputRegione, inputProvincia) {
+    let regioni = rimuoviDuplicati(comuni.map(x => x.regione.nome))
+
+    let opzioni = ""
+    for (let i = 0; i < regioni.length; i++) {
+        opzioni += "<option>" + regioni[i] + "</option>"
+    }
+    inputRegione.innerHTML = opzioni
+
+    // Aggiorna le provincie
+    initSelettoreProvincie(comuni, inputRegione, inputProvincia)
+}
+
+function initSelettoreProvincie(comuni, inputRegione, inputProvincia) {
+    let provincie = rimuoviDuplicati(filtraProvincie(comuni, inputRegione).map(x => x.provincia.nome))
+
+    let opzioni = ""
+    for (let i = 0; i < provincie.length; i++) {
+        opzioni += "<option>" + provincie[i] + "</option>"
+    }
+    inputProvincia.innerHTML = opzioni
+
+    // Aggiorna i comuni
+    aggiornaComuni(comuni, inputProvincia)
+}
+
+function aggiornaComuni(comuni, inputProvincia) {
+    console.log(filtraComuni(comuni, inputProvincia))
+}
+
+function filtraProvincie(comuni, inputRegione) {
+    if (inputRegione.value === "") return comuni
+    return comuni.filter((x) => x.regione.nome === inputRegione.value)
+}
+
+function filtraComuni(comuni, inputProvincia) {
+    if (inputProvincia.value === "") return comuni
+    return comuni.filter((x) => x.provincia.nome === inputProvincia.value)
+}
+
+function rimuoviDuplicati(arr) {
+    return Array.from(new Set(arr)).sort()
+}
