@@ -18,7 +18,6 @@ async function main() {
     var popup = L.popup();
 
     function onMapClick(e) {
-        console.log(e.latlng);
         popup
             .setLatLng(e.latlng)
             .setContent("You clicked the map at " + e.latlng.toString())
@@ -49,83 +48,9 @@ async function main() {
 }
 
 async function getLatLon(citta) {
-    let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&count=1&language=en&format=json`)
+    let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&count=1&language=en&format=json&countryCode=IT`)
     let data = await x.json()
     return { lat: data.results[0].latitude, lon: data.results[0].longitude }
-}
-
-async function meteoDiz(coords) {
-    return await meteo(coords["lat"], coords["lon"])
-}
-
-async function meteo(lat, lon) {
-
-    const url = "https://api.open-meteo.com/v1/forecast?" + new URLSearchParams({
-        latitude: lat,
-        longitude: lon,
-        daily: "sunrise,sunset,uv_index_max,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,precipitation_hours",
-        hourly: "temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,surface_pressure,cloud_cover,visibility,wind_speed_120m,wind_direction_120m,temperature_80m",
-        current: "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,surface_pressure,wind_speed_10m,wind_gusts_10m,wind_direction_10m",
-        past_days: 1,
-        timezone: "auto"
-    });
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.current || !data.hourly || !data.daily) {
-        console.error("Risposta API non valida:", data);
-        return;
-    }
-
-    let weatherData = {
-        current: {
-            time: new Date(data.current.time),
-            temperature_2m: data.current.temperature_2m,
-            relative_humidity_2m: data.current.relative_humidity_2m,
-            apparent_temperature: data.current.apparent_temperature,
-            is_day: data.current.is_day,
-            precipitation: data.current.precipitation,
-            surface_pressure: data.current.surface_pressure,
-            wind_speed_10m: data.current.wind_speed_10m,
-            wind_gusts_10m: data.current.wind_gusts_10m,
-            wind_direction_10m: data.current.wind_direction_10m,
-        },
-
-        hourly: {
-            time: data.hourly.time.map(t => new Date(t)),
-            temperature_2m: data.hourly.temperature_2m,
-            relative_humidity_2m: data.hourly.relative_humidity_2m,
-            dew_point_2m: data.hourly.dew_point_2m,
-            apparent_temperature: data.hourly.apparent_temperature,
-            precipitation_probability: data.hourly.precipitation_probability,
-            precipitation: data.hourly.precipitation,
-            rain: data.hourly.rain,
-            showers: data.hourly.showers,
-            snowfall: data.hourly.snowfall,
-            snow_depth: data.hourly.snow_depth,
-            surface_pressure: data.hourly.surface_pressure,
-            cloud_cover: data.hourly.cloud_cover,
-            visibility: data.hourly.visibility,
-            wind_speed_120m: data.hourly.wind_speed_120m,
-            wind_direction_120m: data.hourly.wind_direction_120m,
-            temperature_80m: data.hourly.temperature_80m,
-        },
-
-        daily: {
-            time: data.daily.time.map(t => new Date(t)),
-            sunrise: data.daily.sunrise.map(t => new Date(t)),
-            sunset: data.daily.sunset.map(t => new Date(t)),
-            uv_index_max: data.daily.uv_index_max,
-            temperature_2m_max: data.daily.temperature_2m_max,
-            temperature_2m_min: data.daily.temperature_2m_min,
-            precipitation_sum: data.daily.precipitation_sum,
-            precipitation_probability_max: data.daily.precipitation_probability_max,
-            precipitation_hours: data.daily.precipitation_hours,
-        }
-    };
-
-    return weatherData
 }
 
 async function getComuni() {
@@ -138,7 +63,7 @@ function aggiornaSelettoreRegioni(comuni, inputRegione, inputProvincia) {
 
     let opzioni = ""
     for (let i = 0; i < regioni.length; i++) {
-        opzioni += "<option>" + regioni[i] + "</option>"
+        opzioni += "<option>" + regioni[i].split("/")[0] + "</option>"
     }
     inputRegione.innerHTML = opzioni
 
@@ -151,28 +76,15 @@ async function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) 
 
     let opzioni = ""
     for (let i = 0; i < provincie.length; i++) {
-        opzioni += "<option>" + provincie[i] + "</option>"
+        opzioni += "<option>" + provincie[i].split("/")[0] + "</option>"
     }
     inputProvincia.innerHTML = opzioni
-
-    // Zoom to Region if selected
-    if (inputRegione.value) {
-        try {
-            const regionCoords = await getLatLon(inputRegione.value + ", Italy");
-            if (regionCoords && regionCoords.lat) {
-                map.flyTo([regionCoords.lat, regionCoords.lon], 8);
-            }
-        } catch (e) {
-            console.warn("Zoom fail:", e)
-        }
-    }
 
     // Aggiorna i comuni
     aggiornaMappa(filtraComuni(comuni, inputProvincia), inputProvincia.value)
 }
 
 async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
-    console.log(comuniSelezionati)
 
     // Clear existing markers
     if (window.comuneMarkers) {
@@ -182,11 +94,16 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
 
     // Fetch province coordinates for filtering
     let provinceCenter = null;
+    let animationPromise = Promise.resolve();
+
     if (nomeProvincia) {
         try {
-            provinceCenter = await getLatLon(nomeProvincia + ", Italy");
+            provinceCenter = await getLatLon(nomeProvincia);
             if (provinceCenter && provinceCenter.lat) {
-                map.flyTo([provinceCenter.lat, provinceCenter.lon], 10);
+                animationPromise = new Promise(resolve => {
+                    map.once('moveend', resolve);
+                    map.flyTo([provinceCenter.lat, provinceCenter.lon], 10);
+                });
             }
         } catch (e) {
             console.warn("Could not fetch province center:", e);
@@ -194,7 +111,8 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
     }
 
     // Add new markers
-    for (const comune of comuniSelezionati) {
+    // Add new markers
+    const markerPromises = comuniSelezionati.map(async (comune) => {
         try {
             const coords = await getLatLon(comune.nome);
             if (coords && coords.lat && coords.lon) {
@@ -204,23 +122,28 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
                     // 70km threshold (70000 meters)
                     if (dist > 70000) {
                         console.warn(`Skipping ${comune.nome} - too far from ${nomeProvincia} (${Math.round(dist / 1000)}km)`);
-                        continue;
+                        return null;
                     }
                 }
 
                 const marker = L.marker([coords.lat, coords.lon])
                     .addTo(map)
-                    .bindPopup(`<b>${comune.nome}</b><br>Provincia: ${comune.provincia.nome}`);
+                    .bindPopup(`<b>${comune.nome}</b><br>Provincia: ${comune.provincia.nome}<br><a href="dettagli.html?city=${encodeURIComponent(comune.nome)}" class="btn btn-primary btn-sm mt-2 text-white" style="text-decoration: none;">Dettagli Meteo</a>`);
 
-                window.comuneMarkers.push(marker);
+                return marker;
             }
         } catch (e) {
             console.warn(`Could not get coords for ${comune.nome}:`, e);
+            return null;
         }
-    }
+    });
+
+    const newMarkers = await Promise.all(markerPromises);
+    window.comuneMarkers.push(...newMarkers.filter(m => m !== null));
 
     // Fit bounds if we have markers
     if (window.comuneMarkers.length > 0) {
+        await animationPromise;
         const group = new L.featureGroup(window.comuneMarkers);
         map.fitBounds(group.getBounds());
     }
@@ -228,12 +151,12 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
 
 function filtraProvincie(comuni, inputRegione) {
     if (inputRegione.value === "") return comuni
-    return comuni.filter((x) => x.regione.nome === inputRegione.value)
+    return comuni.filter((x) => x.regione.nome.split("/")[0] === inputRegione.value)
 }
 
 function filtraComuni(comuni, inputProvincia) {
     if (inputProvincia.value === "") return comuni
-    return comuni.filter((x) => x.provincia.nome === inputProvincia.value)
+    return comuni.filter((x) => x.provincia.nome.split("/")[0] === inputProvincia.value)
 }
 
 function rimuoviDuplicati(arr) {

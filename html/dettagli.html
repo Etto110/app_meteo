@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dettagli Meteo</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body class="bg-light">
+
+    <div class="container py-5">
+        <a href="index.html" class="btn btn-outline-secondary mb-4">&larr; Torna alla Mappa</a>
+
+        <h1 id="city-name" class="display-4 text-center fw-bold text-primary mb-5">Caricamento...</h1>
+
+        <!-- Current Weather -->
+        <div class="row justify-content-center mb-5" id="current-weather-container" style="display: none;">
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 text-center h-100 p-4">
+                    <h2 class="h4 text-muted mb-3">Meteo Attuale</h2>
+                    <div class="display-1 fw-bold text-dark mb-2" id="current-temp">--°C</div>
+                    <p class="lead text-secondary" id="current-condition">--</p>
+                    <div class="row mt-4 text-start">
+                        <div class="col-6">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Vento</small>
+                            <p class="fw-semibold" id="current-wind">-- km/h</p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Umidità</small>
+                            <p class="fw-semibold" id="current-humidity">--%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Forecast -->
+        <h3 class="h4 fw-bold mb-4">Previsioni 7 Giorni</h3>
+        <div class="row g-4" id="forecast-container">
+            <!-- Forecast cards will be injected here -->
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+
+    <script src="../js/dettagli.js"></script>
+</body>
+
+</html>
