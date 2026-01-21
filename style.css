@@ -1,3 +1,35 @@
+/* M3 Tokens (Existing + New) */
+:root {
+    --md-sys-color-primary: #006493;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #cae6ff;
+    --md-sys-color-on-primary-container: #001e30;
+    --md-sys-color-secondary: #50606e;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #d3e5f5;
+    --md-sys-color-on-secondary-container: #0c1d29;
+    --md-sys-color-surface: #fcfcff;
+    --md-sys-color-on-surface: #1a1c1e;
+    --md-sys-color-surface-variant: #dde3ea;
+    --md-sys-color-on-surface-variant: #41474d;
+    --md-sys-color-outline: #72787e;
+    --md-sys-color-background: #87b7ce;
+
+    /* Shapes */
+    --md-sys-shape-corner-large: 28px;
+    --md-sys-shape-corner-medium: 16px;
+    --md-sys-shape-corner-full: 9999px;
+
+    /* Custom Gradient for Progress */
+    --md-custom-gradient: linear-gradient(90deg, #cae6ff 0%, #006493 100%);
+}
+
+body {
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-surface);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 /* Map full screen */
 #map {
     position: fixed;
@@ -8,19 +40,23 @@
     z-index: 1;
 }
 
-/* Floating Island Styles */
+/* Glassmorphism Island (Refined for Pixel Look) */
 .island-container {
     position: fixed;
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 800px;
+    max-width: 600px;
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 28px; /* Material 3 large rounding */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background: rgba(252, 252, 255, 0.85);
+    /* More transparent/glassy */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--md-sys-shape-corner-large);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    /* Softer shadow */
+    border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
 }
 
@@ -28,4 +64,111 @@
 .main-content {
     position: relative;
     z-index: 10;
+}
+
+/* M3 Form Controls (Inputs/Selects) */
+.form-floating>.form-select {
+    border-radius: var(--md-sys-shape-corner-medium) !important;
+    border: none;
+    background-color: var(--md-sys-color-surface-variant);
+    /* Surface Variant for input bg */
+    color: var(--md-sys-color-on-surface-variant);
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+}
+
+.form-floating>label {
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.8;
+}
+
+/* Buttons */
+.btn-m3-back {
+    color: var(--md-sys-color-on-surface);
+    background-color: var(--md-sys-color-surface-variant);
+    /* Slightly visible circle */
+    border: none;
+    border-radius: var(--md-sys-shape-corner-full);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    text-decoration: none;
+}
+
+.btn-m3-back:hover {
+    background-color: var(--md-sys-color-outline);
+    color: var(--md-sys-color-on-primary);
+}
+
+/* Cards */
+.m3-card-hero {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-radius: var(--md-sys-shape-corner-large);
+    padding: 2rem;
+    border: none;
+}
+
+.m3-card-secondary {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-radius: var(--md-sys-shape-corner-medium);
+    padding: 1.5rem;
+    height: 100%;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.m3-card-daily {
+    background-color: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+    border-radius: var(--md-sys-shape-corner-medium);
+    padding: 1rem;
+    height: 100%;
+    border: none;
+    transition: transform 0.2s;
+}
+
+.m3-card-daily:hover {
+    transform: translateY(-5px);
+}
+
+.m3-font-display {
+    font-weight: 400;
+    line-height: 1;
+}
+
+/* Badges */
+.badge-m3-max {
+    background-color: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-on-primary) !important;
+}
+
+.badge-m3-min {
+    background-color: var(--md-sys-color-surface) !important;
+    color: var(--md-sys-color-primary) !important;
+    border: 1px solid var(--md-sys-color-outline);
+}
+
+/* Progress Bar Custom */
+.progress-m3 {
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--md-sys-shape-corner-full);
+    margin-top: 1rem;
+    overflow: hidden;
+}
+
+.progress-bar-m3-fill {
+    height: 100%;
+    background-color: var(--md-sys-color-on-secondary-container);
+    /* Dark blue fill */
+    border-radius: var(--md-sys-shape-corner-full);
+    width: 0%;
+    /* JS will animate this */
+    transition: width 1s ease-out;
 }

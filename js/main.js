@@ -61,27 +61,27 @@ async function getComuni() {
 function aggiornaSelettoreRegioni(comuni, inputRegione, inputProvincia) {
     let regioni = rimuoviDuplicati(comuni.map(x => x.regione.nome))
 
-    let opzioni = ""
+    let opzioni = '<option value="">Seleziona Regione</option>'
     for (let i = 0; i < regioni.length; i++) {
-        opzioni += "<option>" + regioni[i].split("/")[0] + "</option>"
+        opzioni += `<option value="${regioni[i].split("/")[0]}">${regioni[i].split("/")[0]}</option>`
     }
     inputRegione.innerHTML = opzioni
 
-    // Aggiorna le provincie
-    aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia)
+    // Reset provincia selector too
+    inputProvincia.innerHTML = '<option value="">Seleziona Provincia</option>'
 }
 
-async function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) {
+function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) {
     let provincie = rimuoviDuplicati(filtraProvincie(comuni, inputRegione).map(x => x.provincia.nome))
 
-    let opzioni = ""
+    let opzioni = '<option value="">Seleziona Provincia</option>'
     for (let i = 0; i < provincie.length; i++) {
-        opzioni += "<option>" + provincie[i].split("/")[0] + "</option>"
+        opzioni += `<option value="${provincie[i].split("/")[0]}">${provincie[i].split("/")[0]}</option>`
     }
     inputProvincia.innerHTML = opzioni
 
-    // Aggiorna i comuni
-    aggiornaMappa(filtraComuni(comuni, inputProvincia), inputProvincia.value)
+    // Don't auto-trigger map update on province list change unless we want to clear it
+    // aggiornaMappa([], "") // Clear map is safer
 }
 
 async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
@@ -111,7 +111,6 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
     }
 
     // Add new markers
-    // Add new markers
     const markerPromises = comuniSelezionati.map(async (comune) => {
         try {
             const coords = await getLatLon(comune.nome);
@@ -121,7 +120,6 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
                     const dist = map.distance([provinceCenter.lat, provinceCenter.lon], [coords.lat, coords.lon]);
                     // 70km threshold (70000 meters)
                     if (dist > 70000) {
-                        console.warn(`Skipping ${comune.nome} - too far from ${nomeProvincia} (${Math.round(dist / 1000)}km)`);
                         return null;
                     }
                 }
