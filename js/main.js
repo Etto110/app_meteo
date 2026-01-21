@@ -48,7 +48,7 @@ async function main() {
 }
 
 async function getLatLon(citta) {
-    let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&count=1&language=en&format=json&countryCode=IT`)
+    let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&language=it&format=json&countryCode=IT`)
     let data = await x.json()
     return { lat: data.results[0].latitude, lon: data.results[0].longitude }
 }
