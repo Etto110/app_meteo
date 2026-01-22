@@ -14,8 +14,6 @@ async function main() {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
-    map.on('click', onMapClick)
-
     // Selettori regioni e province
 
     const comuni = await getComuni()
