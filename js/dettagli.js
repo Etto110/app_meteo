@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
     const city = params.get("city");
 
@@ -71,7 +71,21 @@ function renderWeather(data) {
 
     // Grid Details
     document.getElementById("current-details-container").style.display = "flex";
+    document.getElementById("sunrise-sunset").textContent = `${data.daily.sunrise[0].split("T")[1]} / ${data.daily.sunset[0].split("T")[1]}`;
+    // progress based on time of day
+    const now = new Date();
+    const sunrise = new Date(data.daily.sunrise[0]);
+    const sunset = new Date(data.daily.sunset[0]);
 
+    if (now >= sunrise && now <= sunset) {
+        const totalDaylight = sunset - sunrise;
+        const elapsedDaylight = now - sunrise;
+        const daylightProgress = Math.min((elapsedDaylight / totalDaylight) * 100, 100);
+        document.getElementById("bar-sunrise").style.width = `${daylightProgress}%`;
+    } else {
+        document.getElementById("bar-sunrise").style.width = "0%";
+    }
+    
     // Wind
     const windSpeed = data.current.wind_speed_10m;
     document.getElementById("current-wind").textContent = `${windSpeed} km/h`;

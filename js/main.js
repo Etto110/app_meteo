@@ -110,9 +110,14 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
                     }
                 }
 
+                // Fetch temperature
+                const weatherData = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true`)
+                    .then(res => res.json());
+                const temperature = weatherData.current_weather?.temperature ?? "N/A";
+
                 const marker = L.marker([coords.lat, coords.lon])
                     .addTo(map)
-                    .bindPopup(`<b>${comune.nome}</b><br>Provincia: ${comune.provincia.nome}<br><a href="dettagli.html?city=${encodeURIComponent(comune.nome)}" class="btn btn-primary btn-sm mt-2 text-white" style="text-decoration: none;">Dettagli Meteo</a>`);
+                    .bindPopup(`<b>${comune.nome}</b><br>Provincia: ${comune.provincia.nome}<br>Temperatura: ${temperature}°C<br><a href="dettagli.html?city=${encodeURIComponent(comune.nome)}" class="btn btn-primary btn-sm mt-2 text-white" style="text-decoration: none;">Dettagli Meteo</a>`);
 
                 return marker;
             }
