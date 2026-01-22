@@ -14,18 +14,6 @@ async function main() {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
-    // creazione popup con latlon
-    var popup = L.popup();
-
-    function onMapClick(e) {
-        popup
-            .setLatLng(e.latlng)
-            .setContent("You clicked the map at " + e.latlng.toString())
-            .openOn(map)
-        return e.latlng
-
-    }
-
     map.on('click', onMapClick)
 
     // Selettori regioni e province
