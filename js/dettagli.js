@@ -28,7 +28,7 @@ async function loadWeather(city) {
 
 async function getLatLon(citta) {
     try {
-        let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&count=1&language=it&format=json`);
+        let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&language=it&format=json&countryCode=IT`);
         let data = await x.json();
         // Robustness fix: check for results array
         if (!data.results || data.results.length === 0) return null;
