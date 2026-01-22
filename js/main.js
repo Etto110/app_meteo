@@ -7,10 +7,10 @@ let comuneMarkers = []; // Global scope for markers
 
 async function main() {
     // creazione mappa
-    map = L.map('map').setView([45, 12], 13);
+    map = L.map('map').setView([41, 12], 6);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
+        maxZoom: 12,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
