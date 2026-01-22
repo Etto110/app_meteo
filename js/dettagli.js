@@ -14,7 +14,7 @@ async function loadWeather(city) {
     try {
         const coords = await getLatLon(city);
         if (coords) {
-            const data = await meteo(coords.lat, coords.lon);
+            const data = await getMeteo(coords.lat, coords.lon);
             renderWeather(data);
         } else {
             document.getElementById("city-name").textContent = "Città non trovata";
@@ -39,7 +39,7 @@ async function getLatLon(citta) {
     }
 }
 
-async function meteo(lat, lon) {
+async function getMeteo(lat, lon) {
     const url = "https://api.open-meteo.com/v1/forecast?" + new URLSearchParams({
         latitude: lat,
         longitude: lon,
@@ -85,7 +85,7 @@ function renderWeather(data) {
     } else {
         document.getElementById("bar-sunrise").style.width = "0%";
     }
-    
+
     // Wind
     const windSpeed = data.current.wind_speed_10m;
     document.getElementById("current-wind").textContent = `${windSpeed} km/h`;

@@ -28,15 +28,22 @@ async function main() {
     })
 
     inputProvincia.addEventListener("change", () => {
-        aggiornaMappa(filtraComuni(comuni, inputProvincia), inputProvincia.value)
+        aggiornaMappa(filtraComuni(comuni, inputProvincia))
         // Zoom mappa
     })
 }
 
 async function getLatLon(citta) {
-    let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&language=it&format=json&countryCode=IT`)
-    let data = await x.json()
-    return { lat: data.results[0].latitude, lon: data.results[0].longitude }
+    try {
+        let x = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${citta}&language=it&format=json&countryCode=IT`);
+        let data = await x.json();
+        // Robustness fix: check for results array
+        if (!data.results || data.results.length === 0) return null;
+        return { lat: data.results[0].latitude, lon: data.results[0].longitude };
+    } catch (e) {
+        console.error("Geocoding Error", e);
+        return null; // Return null to handle gracefully in caller
+    }
 }
 
 async function getComuni() {
@@ -70,39 +77,26 @@ function aggiornaSelettoreProvincie(comuni, inputRegione, inputProvincia) {
     // aggiornaMappa([], "") // Clear map is safer
 }
 
-async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
+async function aggiornaMappa(comuniSelezionati) {
+    if (comuniSelezionati.length === 0) return;
 
     // Clear existing markers
-    if (window.comuneMarkers) {
-        window.comuneMarkers.forEach(marker => map.removeLayer(marker));
+    if (comuneMarkers) {
+        comuneMarkers.forEach(marker => map.removeLayer(marker));
     }
-    window.comuneMarkers = [];
+    comuneMarkers = [];
 
     // Fetch province coordinates for filtering
-    let provinceCenter = null;
-    let animationPromise = Promise.resolve();
-
-    if (nomeProvincia) {
-        try {
-            provinceCenter = await getLatLon(nomeProvincia);
-            if (provinceCenter && provinceCenter.lat) {
-                animationPromise = new Promise(resolve => {
-                    map.once('moveend', resolve);
-                    map.flyTo([provinceCenter.lat, provinceCenter.lon], 10);
-                });
-            }
-        } catch (e) {
-            console.warn("Could not fetch province center:", e);
-        }
-    }
+    let provinceCenter = await getLatLon(comuniSelezionati[Math.floor(comuniSelezionati.length / 2)].nome);
+    map.flyTo([provinceCenter.lat, provinceCenter.lon], 10);
 
     // Add new markers
     const markerPromises = comuniSelezionati.map(async (comune) => {
         try {
             const coords = await getLatLon(comune.nome);
-            if (coords && coords.lat && coords.lon) {
+            if (coords) {
                 // Check distance if we have a province center
-                if (provinceCenter && provinceCenter.lat) {
+                if (provinceCenter) {
                     const dist = map.distance([provinceCenter.lat, provinceCenter.lon], [coords.lat, coords.lon]);
                     // 70km threshold (70000 meters)
                     if (dist > 70000) {
@@ -128,23 +122,22 @@ async function aggiornaMappa(comuniSelezionati, nomeProvincia) {
     });
 
     const newMarkers = await Promise.all(markerPromises);
-    window.comuneMarkers.push(...newMarkers.filter(m => m !== null));
+    comuneMarkers.push(...newMarkers.filter(m => m !== null && m !== undefined));
 
     // Fit bounds if we have markers
-    if (window.comuneMarkers.length > 0) {
-        await animationPromise;
-        const group = new L.featureGroup(window.comuneMarkers);
+    if (comuneMarkers.length > 0) {
+        const group = new L.featureGroup(comuneMarkers);
         map.fitBounds(group.getBounds());
     }
 }
 
 function filtraProvincie(comuni, inputRegione) {
-    if (inputRegione.value === "") return comuni
+    if (inputRegione.value === "") return []
     return comuni.filter((x) => x.regione.nome.split("/")[0] === inputRegione.value)
 }
 
 function filtraComuni(comuni, inputProvincia) {
-    if (inputProvincia.value === "") return comuni
+    if (inputProvincia.value === "") return []
     return comuni.filter((x) => x.provincia.nome.split("/")[0] === inputProvincia.value)
 }
 
